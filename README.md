@@ -1,22 +1,22 @@
-# Octave docker container
+# Octave+PDE1D docker container
 
 [![Docker Build Status](https://img.shields.io/docker/automated/jgoldfar/octave.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/jgoldfar/octave.svg)](https://hub.docker.com/r/jgoldfar/octave/)
-[![Build Status](https://travis-ci.org/jgoldfar/octave-docker.svg?branch=master)](https://travis-ci.org/jgoldfar/octave-docker)
+[![Build Status](https://travis-ci.org/jgoldfar/octave-pde1d-docker.svg?branch=master)](https://travis-ci.org/jgoldfar/octave-pde1d-docker)
 
-This repository builds containers for [Octave](https://octave.org/), primarily for the purposes of running continuous integration processes against MATLAB code.
+This repository builds containers for [Octave](https://octave.org/) including [pde1d](https://github.com/jgoldfar/pde1d), primarily for the purposes of running continuous integration processes against MATLAB code.
 
 ## Setup
 
 build:
 
 ```shell
-docker build -t jgoldfar/octave -f Dockerfile.debian .
+docker build -t jgoldfar/octave:pde1d -f Dockerfile.debian .
 ```
 
 ## Usage
 
 ```shell
-docker run --rm -i --user="$(id -u):$(id -g)" --net=none -v "$(pwd)":/data jgoldfar/octave:debian
+docker run --rm -i --user="$(id -u):$(id -g)" --net=none -v "$(pwd)":/data jgoldfar/octave:pde1d
 ```
 
 Your current working directory should be mounted to `/data` inside the running container.
@@ -27,6 +27,4 @@ Why should I use this container?
 
 ## Container Descriptions
 
-* `debian` contains an Octave installation on top of Debian Stretch
-
-* `alpine` contains an Octave installation on top of Alpine Linux Edge
+* `pde1d` contains an Octave+pde1d installation on top of Debian Stretch
