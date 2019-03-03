@@ -61,16 +61,17 @@ RUN apt-get -qq -y update && \
 COPY --from=builder /pde1d/pde1d.mex /usr/local/share/octave/site/m/
 COPY --from=builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
 COPY --from=builder /pde1d/pdepe.m /usr/local/share/octave/site/m/
+COPY --from=builder /sundials/usr/lib/libsundials_ida.so.3 /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /sundials/usr/lib/libsundials_sunlinsolklu.so.1 /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /sundials/usr/lib/libsundials_nvecserial.so.3 /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /sundials/usr/lib/libsundials_sunmatrixsparse.so.1 /usr/lib/x86_64-linux-gnu/
+
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libklu.so.1 /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libbtf.so.1 /usr/lib/x86_64-linux-gnu/
 
 # Smoke test
 RUN octave --version && \
-    octave --eval "disp(eye(2) \ [1, 10]');" && \
-    octave --eval "hf = figure(); x=linspace(0,1,30); plot(x, erf(x)); print(hf, 'plot.eps', '-deps');" && \
     octave --eval "disp(exist('pdepe'));"
 
 # Set entrypoint (so this image can be used as an executable.)
 ENTRYPOINT ["/usr/local/bin/octave"]
-
-## Separate entrypoint to easily access mkoctfile JIC
-FROM octave as mkoctfile
-ENTRYPOINT ["mkoctfile"]
