@@ -1,7 +1,9 @@
 FROM debian:stretch-slim as builder
 
 # Make sure we don't get notifications we can't answer during building.
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    OctavePath=/opt/octave-${OctaveVersion} \
+    OctaveVersion=4.4.1
 
 LABEL maintainer="Jonathan Goldfarb <jgoldfar@my.fit.edu>"
 
@@ -15,6 +17,7 @@ RUN apt-get -qq -y update && \
       ca-certificates \
       autoconf \
       automake \
+      # This is necessary for autoreconf
       libtool-bin \
       texinfo \
       gnuplot \ 
@@ -24,18 +27,20 @@ RUN apt-get -qq -y update && \
       patch \
       gperf \
       zip \
+      ghostscript \
+      # hdf5
       libhdf5-serial-dev \
-      libarpack2-dev \
-      libglpk-dev \
       libpcre3-dev \
+      libreadline-dev \
+      libglpk-dev \
       libqrupdate-dev \
       libqhull-dev \
-      libreadline-dev \
       libfftw3-dev \
       libgl2ps-dev \
+      libarpack2-dev \
       libsuitesparse-dev \
       libopenblas-dev \
-      ghostscript \
+      # Graphics
       libgs-dev \
       libgraphicsmagick++ \
       libgraphicsmagick++1-dev \
@@ -47,6 +52,7 @@ RUN apt-get -qq -y update && \
       libfontconfig1-dev \
       librsvg2-bin \
       libosmesa6-dev \
+      # GUI
       libqtcore4 \
       libqtgui4 \
       libqt4-network \
@@ -54,17 +60,14 @@ RUN apt-get -qq -y update && \
       libqscintilla2-dev \
       libqtwebkit4 \
       libxft-dev \
+      # Sundials
       libsundials-serial \
       libsundials-serial-dev \
+      # PDEPE Requirements
       libeigen3-dev \
       libboost-dev
 
-# NOTE: eigen3 and boost are not required for Sundials.
-
-ENV OctaveVersion=4.4.1
-ENV OctavePath=/opt/octave-${OctaveVersion}
-
-ADD getcwd-path-max.patch .
+ADD getcwd-path-max.patch /tmp/
 
 RUN mkdir -p ${OctavePath} && \
     curl -o /tmp/octave-${OctaveVersion}.tar.xz https://ftp.gnu.org/gnu/octave/octave-${OctaveVersion}.tar.xz && \
@@ -73,21 +76,11 @@ RUN mkdir -p ${OctavePath} && \
 #TODO: Re-add make check step
 # ( make check || echo "Tests Failed." )
 
-RUN patch -p0 < getcwd-path-max.patch && \
-    cd ${OctavePath} && \
+RUN cd ${OctavePath} && \
+    patch -p2 < /tmp/getcwd-path-max.patch && \
     autoreconf -i -f && \
     ./configure --disable-docs && \
     make -j3 install
-
-## Build PDEPE. Copied from Dockerfile.debian
-ENV OctaveVersion=4.4.1 \
-    SUITESPARSE_ROOT=/usr/include/suitesparse \
-    SUITESPARSE_LDIR=/usr/lib/x86_64-linux-gnu \
-    EIGEN_ROOT=/usr/include/eigen3 \
-    OCTAVE_ROOT=/usr/local/include/octave-${OctaveVersion} \
-    OCTAVE_LDIR=/usr/local/lib/octave \
-    USE_OCTAVE=true
-
 
 ADD ./pde1d /pde1d
 
@@ -101,7 +94,7 @@ RUN cd /pde1d && \
 ##
 ##
 
-FROM debian:stretch-slim
+FROM debian:stretch-slim as pdepe-gui
 RUN apt-get -qq -y update && \
     apt-get -qq -y --no-install-recommends install \
       texinfo \
@@ -148,13 +141,15 @@ RUN apt-get -qq -y update && \
       libqtgui4 \
       libqt4-network \
       libqtwebkit4 \
-      # Sundials
+      # Sundials + PDEPE
       libsundials-serial \
+      libklu1 \
+      libbtf1 \
       # For Octave installation
       equivs \
       # Others
-      libgraphicsmagick++1-dev \
-      libgraphicsmagick1-dev \
+      libgraphicsmagick++-q16-12 \
+      libgraphicsmagick-q16-3 \
       liblcms2-2 \
       libnghttp2-14 \
       libidn2-0 \
@@ -168,8 +163,7 @@ RUN apt-get -qq -y update && \
       libsz2 \
       libwebpmux2 \
       libwmf0.2-7 \
-      libaec0 \
-      libbtf1
+      libaec0
       
 
 # Set ENV the same as above
@@ -216,16 +210,6 @@ RUN cd /tmp/octave-equivs && \
     dpkg -i octave-local_*.deb
 
 RUN apt-get -qq -y remove \
-      build-essential \
-      patch \
-      curl \
-      autoconf \
-      automake \
-      icoutils \
-      bison \
-      librsvg2-bin \
-      libtool-bin \
-      flex \
       equivs && \
     apt-get -qq -y autoremove && \
     apt-get autoclean && \
