@@ -21,9 +21,9 @@ docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG}
 
 
 # Same as above, with GUI
-IMG_TAG=pdepe-gui
-docker build -f Dockerfile.gui -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG} .
-docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG}
+#IMG_TAG=pdepe-gui
+#docker build -f Dockerfile.gui -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG} .
+#docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG}
 
 # Alpine + Octave + PDE1D
 # Use Docker Hub's infrastructure
