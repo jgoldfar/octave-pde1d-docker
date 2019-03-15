@@ -25,19 +25,6 @@ RUN apt-get -qq -y update && \
       libeigen3-dev \
       libboost-dev
 
-# NOTE: eigen3 and boost are not required for Sundials.
-
-# Build SUNDIALS with int32_t index type
-RUN mkdir /sundials && \
-    cd /sundials && \
-    curl -L https://computation.llnl.gov/projects/sundials/download/sundials-${SUNDIALS_VERSION}.tar.gz -o sundials-${SUNDIALS_VERSION}.tar.gz && \
-    tar xzf sundials-${SUNDIALS_VERSION}.tar.gz && \
-    mkdir -p /sundials/sundials-${SUNDIALS_VERSION}/build && \
-    cd /sundials/sundials-${SUNDIALS_VERSION}/build && \
-    cmake -DCMAKE_INSTALL_PREFIX=${SUNDIALS_ROOT} -DEXAMPLES_INSTALL_PATH=${SUNDIALS_ROOT}/examples -DSUNDIALS_INDEX_TYPE=INT32_T -DBUILD_ARKODE=OFF -DBUILD_CVODE=OFF -DBUILD_CVODES=OFF -DBUILD_IDAS=OFF -DBUILD_KINSOL=OFF -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=${SUITESPARSE_ROOT} -DKLU_LIBRARY_DIR=${SUITESPARSE_LDIR} .. && \
-    make && \
-    make install
-
 ADD ./pde1d /pde1d
 
 # Add include directories for SUNDIALS (above) as well as eigen and suitesparse (for KLU)
@@ -55,22 +42,35 @@ FROM jgoldfar/octave:latest as octave
 
 RUN apt-get -qq -y update && \
     apt-get -qq -y --no-install-recommends install \
-      texinfo \
-      gnuplot
+      libsundials-serial \
+      libklu1 \
+      libbtf1 \
+      equivs
 
 COPY --from=builder /pde1d/pde1d.mex /usr/local/share/octave/site/m/
 COPY --from=builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
 COPY --from=builder /pde1d/pdepe.m /usr/local/share/octave/site/m/
-COPY --from=builder /sundials/usr/lib/libsundials_ida.so.3 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /sundials/usr/lib/libsundials_sunlinsolklu.so.1 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /sundials/usr/lib/libsundials_nvecserial.so.3 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /sundials/usr/lib/libsundials_sunmatrixsparse.so.1 /usr/lib/x86_64-linux-gnu/
 
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libklu.so.1 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libbtf.so.1 /usr/lib/x86_64-linux-gnu/
+# Install octave package as equiv package
+COPY octave-local.tpl /tmp/octave-equivs/octave-local.tpl
 
-# Smoke test
-RUN octave --version && \
+RUN cd /tmp/octave-equivs && \
+    equivs-control octave-local && \
+    sed 's/__VER__/${OctaveVersion}/' octave-local.tpl > octave-local && \
+    cat octave-local && \
+    equivs-build octave-local && \
+    dpkg -i octave-local_*.deb
+
+# Cleanup and run smoke test
+RUN apt-get -qq -y remove \
+      equivs && \
+    apt-get -qq -y autoremove && \
+    apt-get autoclean && \
+    cd / && \
+    rm -rf \
+      /var/lib/apt/lists/* \
+      /var/log/dpkg.log && \
+    octave --version && \
     octave --eval "disp(exist('pdepe'));"
 
 # Set entrypoint (so this image can be used as an executable.)
