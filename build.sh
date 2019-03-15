@@ -11,12 +11,18 @@ DOCKER_REPO_BASE=octave
 # Build builder
 IMG_TAG=pdepe
 IMG_TARGET=builder
-docker build -f Dockerfile.debian --target=${IMG_TARGET} -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG}-${IMG_TARGET} .
+#docker build -f Dockerfile.debian --target=${IMG_TARGET} -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG}-${IMG_TARGET} .
 
 
 # Build main entrypoint
 IMG_TARGET=octave
 docker build -f Dockerfile.debian --target=${IMG_TARGET} -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG} .
+docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG}
+
+
+# Same as above, with GUI
+IMG_TAG=pdepe-gui
+docker build -f Dockerfile.gui -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG} .
 docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${IMG_TAG}
 
 # Alpine + Octave + PDE1D

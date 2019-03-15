@@ -1,0 +1,24 @@
+--- opt/octave-4.4.1/m4/getcwd-path-max.m4    2009-04-01 01:34:13.000000000 +1300
++++ opt/octave-4.4.1/m4/getcwd-path-max.m4 2015-05-25 12:50:39.616794241 +1200
+@@ -19177,6 +19177,7 @@
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ #include <fcntl.h>
++#include <stdio.h>
+
+ #ifndef AT_FDCWD
+ # define AT_FDCWD 0
+@@ -19304,6 +19305,13 @@
+
+     /* Try rmdir first, in case the chdir failed.  */
+     rmdir (DIR_NAME);
++    /* Getting rid of the very bottom dirs inside a Docker container is tricky */
++    if (chdir ("../..") < 0) exit (errno);
++    rename (DIR_NAME"/"DIR_NAME, "c");
++    rename (DIR_NAME, "d");
++    rmdir ("c");
++    rmdir ("d");
++    /* Now for the rest */
+     for (i = 0; i <= n_chdirs; i++)
+       {
+    if (chdir ("..") < 0)
