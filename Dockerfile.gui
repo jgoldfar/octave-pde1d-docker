@@ -63,7 +63,7 @@ RUN apt-get -qq -y update && \
       libqt5opengl5-dev \
       libqt5scintilla2-dev \
       libqscintilla2-dev \
-      libqt5webkit5-dev
+      libqt5webkit5-dev \
       libxft-dev \
       # PDEPE Requirements
       libeigen3-dev \
