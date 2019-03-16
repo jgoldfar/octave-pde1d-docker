@@ -2,10 +2,16 @@ language: minimal
 
 services:
   - docker
+
 env:
   - TARGET="pdepe test-pdepe"
   - TARGET=pdepe-gui
-  
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - env: TARGET=pdepe-gui
+
 script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - make ${TARGET}

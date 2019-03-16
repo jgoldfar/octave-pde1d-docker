@@ -15,6 +15,7 @@ RUN apt-get -qq -y update && \
       curl \
       libcurl4-openssl-dev \
       make \
+      cmake \
       ca-certificates \
       autoconf \
       automake \
@@ -61,12 +62,16 @@ RUN apt-get -qq -y update && \
       libqscintilla2-dev \
       libqtwebkit4 \
       libxft-dev \
-      # Sundials
-      libsundials-serial \
-      libsundials-serial-dev \
       # PDEPE Requirements
       libeigen3-dev \
       libboost-dev
+
+RUN curl -o sundials-${SUNDIALS_VERSION}.tar.gz -L https://computation.llnl.gov/projects/sundials/download/sundials-${SUNDIALS_VERSION}.tar.gz && \
+    tar xzf sundials-${SUNDIALS_VERSION}.tar.gz && \
+    mkdir -p sundials-${SUNDIALS_VERSION}/build && \
+    cd sundials-${SUNDIALS_VERSION}/build && \
+    cmake -DBUILD_ARKODE=OFF -DBUILD_CVODE=OFF -DBUILD_CVODES=OFF -DBUILD_IDAS=OFF -DBUILD_KINSOL=OFF -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu .. && \
+    make && make install
 
 ADD getcwd-path-max.patch /tmp/
 
@@ -101,6 +106,7 @@ RUN apt-get -qq -y update && \
       texinfo \
       ghostscript \
       gnuplot \
+      curl \
       # Build-essential related
       libgomp1 \
       libcurl4-openssl-dev \
@@ -143,7 +149,6 @@ RUN apt-get -qq -y update && \
       libqt4-network \
       libqtwebkit4 \
       # Sundials + PDEPE
-      libsundials-serial \
       libklu1 \
       libbtf1 \
       # For Octave installation
@@ -176,6 +181,7 @@ COPY --from=builder /usr/local/share/octave /usr/local/share/octave
 
 # Copy over Octave binaries (includes mkoctfile)
 COPY --from=builder /usr/local/bin/*oct* /usr/local/bin/
+COPY --from=builder /usr/local/libexec/octave /usr/local/libexec/octave
 
 # Copy over Octave docstrings. Note that some paths contain 
 # version-specific information.
@@ -222,7 +228,7 @@ RUN apt-get -qq -y remove \
     octave --eval "disp(eye(2) \ [1, 10]');" && \
     octave --eval "hf = figure(); x=linspace(0,1,30); plot(x, erf(x)); print(hf, 'plot.eps', '-deps');" && \
     octave --eval "disp(exist('pdepe'));
-    
+
 
 # Set entrypoint (so this image can be used as an executable.)
 ENTRYPOINT ["/usr/local/bin/octave"]

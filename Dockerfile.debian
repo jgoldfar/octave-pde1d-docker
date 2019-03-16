@@ -4,7 +4,8 @@ FROM debian:stretch-slim as builder
 ENV DEBIAN_FRONTEND=noninteractive \
     OctavePath=/opt/octave-${OctaveVersion} \
     OctaveVersion=4.4.1 \
-    USE_OCTAVE=true
+    USE_OCTAVE=true \
+    SUNDIALS_VERSION=4.1.0
 
 LABEL maintainer="Jonathan Goldfarb <jgoldfar@my.fit.edu>"
 
@@ -15,6 +16,7 @@ RUN apt-get -qq -y update && \
       curl \
       libcurl4-openssl-dev \
       make \
+      cmake \
       ca-certificates \
       autoconf \
       automake \
@@ -53,12 +55,18 @@ RUN apt-get -qq -y update && \
       libfontconfig1-dev \
       librsvg2-bin \
       libosmesa6-dev \
-      # Sundials
-      libsundials-serial \
-      libsundials-serial-dev \
       # PDEPE Requirements
       libeigen3-dev \
       libboost-dev
+
+# Add & Install Sundials
+
+RUN curl -o sundials-${SUNDIALS_VERSION}.tar.gz -L https://computation.llnl.gov/projects/sundials/download/sundials-${SUNDIALS_VERSION}.tar.gz && \
+    tar xzf sundials-${SUNDIALS_VERSION}.tar.gz && \
+    mkdir -p sundials-${SUNDIALS_VERSION}/build && \
+    cd sundials-${SUNDIALS_VERSION}/build && \
+    cmake -DBUILD_ARKODE=OFF -DBUILD_CVODE=OFF -DBUILD_CVODES=OFF -DBUILD_IDAS=OFF -DBUILD_KINSOL=OFF -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu .. && \
+    make && make install
 
 ADD getcwd-path-max.patch /tmp/
 
