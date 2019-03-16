@@ -18,5 +18,5 @@ RUN mkdir -p /sundials/build && \
     curl -o /tmp/sundials-${SUNDIALS_VERSION}.tar.gz -L https://computation.llnl.gov/projects/sundials/download/sundials-${SUNDIALS_VERSION}.tar.gz && \
     tar xzf /tmp/sundials-${SUNDIALS_VERSION}.tar.gz --directory /sundials --strip-components 1 && \
     cd /sundials/build && \
-    cmake -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu .. && \
+    cmake -DBLAS_ENABLE=ON -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu .. && \
     make -j3 && make install
