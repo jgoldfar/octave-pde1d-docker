@@ -3,7 +3,8 @@ FROM debian:stretch-slim as builder
 # Make sure we don't get notifications we can't answer during building.
 ENV DEBIAN_FRONTEND=noninteractive \
     OctavePath=/opt/octave-${OctaveVersion} \
-    OctaveVersion=4.4.1
+    OctaveVersion=4.4.1 \
+    USE_OCTAVE=true
 
 LABEL maintainer="Jonathan Goldfarb <jgoldfar@my.fit.edu>"
 
