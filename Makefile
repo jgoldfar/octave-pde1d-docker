@@ -10,8 +10,15 @@ update-pde1d: pde1d/.git
 ## Recipes for image build
 DOCKER_USERNAME?=jgoldfar
 DOCKER_REPO_BASE?=octave
-build-builder: Dockerfile.debian
-	docker build -f $< --target=builder -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe .
+
+# Base Image for PDEPE/PDE1D
+build-pdepe-base: Dockerfile.base
+	docker build -f $< -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-base .
+
+push-pdepe-base:
+	docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-base
+
+pdepe-base: build-pdepe-base push-pdepe-base
 
 # No-GUI build
 build-pdepe: Dockerfile.debian pde1d/.git update-pde1d

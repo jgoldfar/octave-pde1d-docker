@@ -1,60 +1,15 @@
-FROM debian:stretch-slim as builder
-
-# Make sure we don't get notifications we can't answer during building.
-ENV DEBIAN_FRONTEND=noninteractive \
-    OctavePath=/opt/octave-${OctaveVersion} \
-    OctaveVersion=4.4.1 \
-    USE_OCTAVE=true
+FROM  jgoldfar/octave:pdepe-base as builder
 
 LABEL maintainer="Jonathan Goldfarb <jgoldfar@my.fit.edu>"
 
+# Make sure we don't get notifications we can't answer during building.
+ENV DEBIAN_FRONTEND=noninteractive \
+    OctaveVersion=4.4.1 \
+    OctavePath=/opt/octave \
+    USE_OCTAVE=true
+
 RUN apt-get -qq -y update && \
     apt-get -q -y --no-install-recommends install \
-      build-essential \
-      libgfortran-6-dev \
-      curl \
-      libcurl4-openssl-dev \
-      make \
-      cmake \
-      ca-certificates \
-      autoconf \
-      automake \
-      # This is necessary for autoreconf
-      libtool-bin \
-      texinfo \
-      gnuplot \ 
-      icoutils \
-      bison \
-      flex \
-      patch \
-      gperf \
-      zip \
-      ghostscript \
-      # hdf5
-      libhdf5-serial-dev \
-      libpcre3-dev \
-      libreadline-dev \
-      libglpk-dev \
-      libqrupdate-dev \
-      libqhull-dev \
-      libfftw3-dev \
-      libgl2ps-dev \
-      libarpack2-dev \
-      libsuitesparse-dev \
-      libopenblas-dev \
-      # Graphics
-      libgs-dev \
-      libgraphicsmagick++ \
-      libgraphicsmagick++1-dev \
-      libfltk1.3-dev \
-      libgl1-mesa-dev \
-      libglu1-mesa-dev \
-      freeglut3-dev \
-      libfreetype6-dev \
-      libfontconfig1-dev \
-      librsvg2-bin \
-      libosmesa6-dev \
-      # GUI
       qttools5-dev \
       libqt5core5a \
       libqt5gui5 \
@@ -63,40 +18,22 @@ RUN apt-get -qq -y update && \
       libqt5opengl5-dev \
       libqt5scintilla2-dev \
       libqscintilla2-dev \
-      libqt5webkit5-dev
-      libxft-dev \
-      # PDEPE Requirements
-      libeigen3-dev \
-      libboost-dev
-
-RUN curl -o sundials-${SUNDIALS_VERSION}.tar.gz -L https://computation.llnl.gov/projects/sundials/download/sundials-${SUNDIALS_VERSION}.tar.gz && \
-    tar xzf sundials-${SUNDIALS_VERSION}.tar.gz && \
-    mkdir -p sundials-${SUNDIALS_VERSION}/build && \
-    cd sundials-${SUNDIALS_VERSION}/build && \
-    cmake -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu .. && \
-    make -j3 && make install
-
-ADD getcwd-path-max.patch /tmp/
-
-RUN mkdir -p ${OctavePath} && \
-    curl -o /tmp/octave-${OctaveVersion}.tar.xz https://ftp.gnu.org/gnu/octave/octave-${OctaveVersion}.tar.xz && \
-    tar xJf /tmp/octave-${OctaveVersion}.tar.xz --directory ${OctavePath} --strip-components 1
+      libqt5webkit5-dev \
+      libxft-dev
 
 #TODO: Re-add make check step
 # ( make check || echo "Tests Failed." )
 
 RUN cd ${OctavePath} && \
-    patch -p2 < /tmp/getcwd-path-max.patch && \
-    autoreconf -i -f && \
     ./configure --disable-docs && \
     make -j3 install
 
 ADD ./pde1d /pde1d
 
-# Add include directories for SUNDIALS (above) as well as eigen and suitesparse (for KLU)
 RUN cd /pde1d && \
     make objects && \
     make pde1d.mex
+
 # End builder image
 
 ## 
@@ -228,7 +165,6 @@ RUN apt-get -qq -y remove \
       equivs && \
     apt-get -qq -y autoremove && \
     apt-get autoclean && \
-    cd / && \
     rm -rf \
       /var/lib/apt/lists/* \
       /var/log/dpkg.log && \

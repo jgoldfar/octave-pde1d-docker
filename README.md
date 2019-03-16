@@ -27,6 +27,8 @@ Why should I use this container?
 
 ## Container Descriptions
 
-* `pdepe` contains an Octave+pde1d installation on top of Debian Stretch-Slim (without any GUI components)
+* `pdepe` contains an Octave + pde1d installation on top of Debian Stretch-Slim (without any GUI components)
 
-* `pdepe-gui` Contains an Octave+pde1d installation on top of Debian Stretch-Slim, including GUI components.
+* `pdepe-gui` contains an Octave + pde1d installation on top of Debian Stretch-Slim, including GUI components.
+
+* `pdepe-base` is the image onto which Octave + pde1d is built, and includes Sundials built form source (as required for PDE1D)

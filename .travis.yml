@@ -4,6 +4,7 @@ services:
   - docker
 
 env:
+  - TARGET=pdepe-base
   - TARGET="pdepe test-pdepe"
   - TARGET=pdepe-gui
 

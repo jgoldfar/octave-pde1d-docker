@@ -1,0 +1,22 @@
+FROM jgoldfar/octave:base
+
+LABEL maintainer="Jonathan Goldfarb <jgoldfar@my.fit.edu>"
+
+# Make sure we don't get notifications we can't answer during building.
+ENV DEBIAN_FRONTEND=noninteractive \
+    SUNDIALS_VERSION=4.1.0
+
+RUN apt-get -qq -y update && \
+    apt-get -qq -y --no-install-recommends install \
+      libeigen3-dev \
+      libboost-dev \
+      cmake
+
+# Add & Install Sundials
+
+RUN mkdir -p /sundials/build && \
+    curl -o /tmp/sundials-${SUNDIALS_VERSION}.tar.gz -L https://computation.llnl.gov/projects/sundials/download/sundials-${SUNDIALS_VERSION}.tar.gz && \
+    tar xzf /tmp/sundials-${SUNDIALS_VERSION}.tar.gz --directory /sundials --strip-components 1 && \
+    cd /sundials/build && \
+    cmake -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu .. && \
+    make -j3 && make install
