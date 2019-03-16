@@ -65,8 +65,8 @@ RUN curl -o sundials-${SUNDIALS_VERSION}.tar.gz -L https://computation.llnl.gov/
     tar xzf sundials-${SUNDIALS_VERSION}.tar.gz && \
     mkdir -p sundials-${SUNDIALS_VERSION}/build && \
     cd sundials-${SUNDIALS_VERSION}/build && \
-    cmake -DBUILD_ARKODE=OFF -DBUILD_CVODE=OFF -DBUILD_CVODES=OFF -DBUILD_IDAS=OFF -DBUILD_KINSOL=OFF -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu .. && \
-    make && make install
+    cmake -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu .. && \
+    make -j3 && make install
 
 ADD getcwd-path-max.patch /tmp/
 
@@ -213,7 +213,8 @@ RUN apt-get -qq -y remove \
     octave --version && \
     octave --eval "disp(eye(2) \ [1, 10]');" && \
     octave --eval "hf = figure(); x=linspace(0,1,30); plot(x, erf(x)); print(hf, 'plot.eps', '-deps');" && \
-    octave --eval "disp(exist('pdepe'));
+    octave --eval "disp(exist('pdepe'));" && \
+    rm -f plot.eps
     
 
 # Set entrypoint (so this image can be used as an executable.)
