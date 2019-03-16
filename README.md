@@ -10,13 +10,13 @@ This repository builds containers for [Octave](https://octave.org/) including [p
 build:
 
 ```shell
-docker build -t jgoldfar/octave:pde1d -f Dockerfile.debian .
+docker build -t jgoldfar/octave:pdepe -f Dockerfile.debian .
 ```
 
 ## Usage
 
 ```shell
-docker run --rm -i --user="$(id -u):$(id -g)" --net=none -v "$(pwd)":/data jgoldfar/octave:pde1d
+docker run --rm -i --user="$(id -u):$(id -g)" --net=none -v "$(pwd)":/data jgoldfar/octave:pdepe
 ```
 
 Your current working directory should be mounted to `/data` inside the running container.
@@ -27,4 +27,6 @@ Why should I use this container?
 
 ## Container Descriptions
 
-* `pde1d` contains an Octave+pde1d installation on top of Debian Stretch
+* `pdepe` contains an Octave+pde1d installation on top of Debian Stretch-Slim (without any GUI components)
+
+* `pdepe-gui` Contains an Octave+pde1d installation on top of Debian Stretch-Slim, including GUI components.

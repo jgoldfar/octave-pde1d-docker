@@ -1,48 +1,83 @@
-FROM jgoldfar/octave:latest as builder
+FROM debian:stretch-slim as builder
 
-# Set ENV the same as above
-ENV OctaveVersion=4.4.1 \
-    SUNDIALS_ROOT=/sundials/usr \
-    SUNDIALS_VERSION=3.1.2 \
-    SUITESPARSE_ROOT=/usr/include/suitesparse \
-    SUITESPARSE_LDIR=/usr/lib/x86_64-linux-gnu \
-    EIGEN_ROOT=/usr/include/eigen3 \
-    OCTAVE_ROOT=/usr/local/include/octave-${OctaveVersion} \
-    OCTAVE_LDIR=/usr/local/lib/octave \
+# Make sure we don't get notifications we can't answer during building.
+ENV DEBIAN_FRONTEND=noninteractive \
+    OctavePath=/opt/octave-${OctaveVersion} \
+    OctaveVersion=4.4.1 \
     USE_OCTAVE=true
-    
+
+LABEL maintainer="Jonathan Goldfarb <jgoldfar@my.fit.edu>"
+
 RUN apt-get -qq -y update && \
-    apt-get -qq -y --no-install-recommends install \
+    apt-get -q -y --no-install-recommends install \
       build-essential \
+      libgfortran-6-dev \
       curl \
-      # For curl dependency in Octave build
       libcurl4-openssl-dev \
-      cmake \
       make \
       ca-certificates \
-      python \
+      autoconf \
+      automake \
+      # This is necessary for autoreconf
+      libtool-bin \
+      texinfo \
+      gnuplot \ 
+      icoutils \
+      bison \
+      flex \
+      patch \
+      gperf \
+      zip \
+      ghostscript \
+      # hdf5
+      libhdf5-serial-dev \
+      libpcre3-dev \
+      libreadline-dev \
+      libglpk-dev \
+      libqrupdate-dev \
+      libqhull-dev \
+      libfftw3-dev \
+      libgl2ps-dev \
+      libarpack2-dev \
       libsuitesparse-dev \
+      libopenblas-dev \
+      # Graphics
+      libgs-dev \
+      libgraphicsmagick++ \
+      libgraphicsmagick++1-dev \
+      libfltk1.3-dev \
+      libgl1-mesa-dev \
+      libglu1-mesa-dev \
+      freeglut3-dev \
+      libfreetype6-dev \
+      libfontconfig1-dev \
+      librsvg2-bin \
+      libosmesa6-dev \
+      # Sundials
+      libsundials-serial \
+      libsundials-serial-dev \
+      # PDEPE Requirements
       libeigen3-dev \
       libboost-dev
 
-# NOTE: eigen3 and boost are not required for Sundials.
+ADD getcwd-path-max.patch /tmp/
 
-# Build SUNDIALS with int32_t index type
-RUN mkdir /sundials && \
-    cd /sundials && \
-    curl -L https://computation.llnl.gov/projects/sundials/download/sundials-${SUNDIALS_VERSION}.tar.gz -o sundials-${SUNDIALS_VERSION}.tar.gz && \
-    tar xzf sundials-${SUNDIALS_VERSION}.tar.gz && \
-    mkdir -p /sundials/sundials-${SUNDIALS_VERSION}/build && \
-    cd /sundials/sundials-${SUNDIALS_VERSION}/build && \
-    cmake -DCMAKE_INSTALL_PREFIX=${SUNDIALS_ROOT} -DEXAMPLES_INSTALL_PATH=${SUNDIALS_ROOT}/examples -DSUNDIALS_INDEX_TYPE=INT32_T -DBUILD_ARKODE=OFF -DBUILD_CVODE=OFF -DBUILD_CVODES=OFF -DBUILD_IDAS=OFF -DBUILD_KINSOL=OFF -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=${SUITESPARSE_ROOT} -DKLU_LIBRARY_DIR=${SUITESPARSE_LDIR} .. && \
-    make && \
-    make install
+RUN mkdir -p ${OctavePath} && \
+    curl -o /tmp/octave-${OctaveVersion}.tar.xz https://ftp.gnu.org/gnu/octave/octave-${OctaveVersion}.tar.xz && \
+    tar xJf /tmp/octave-${OctaveVersion}.tar.xz --directory ${OctavePath} --strip-components 1
+
+#TODO: Re-add make check step
+# ( make check || echo "Tests Failed." )
+
+RUN cd ${OctavePath} && \
+    patch -p2 < /tmp/getcwd-path-max.patch && \
+    autoreconf -i -f && \
+    ./configure --without-qt --disable-docs && \
+    make -j3 install
 
 ADD ./pde1d /pde1d
 
-# Add include directories for SUNDIALS (above) as well as eigen and suitesparse (for KLU)
 RUN cd /pde1d && \
-    make objects && \
     make pde1d.mex
 # End builder image
 
@@ -50,28 +85,128 @@ RUN cd /pde1d && \
 ##
 ##
 
-# Final image contains just Octave
-FROM jgoldfar/octave:latest as octave
-
+FROM debian:stretch-slim as pdepe-gui
 RUN apt-get -qq -y update && \
     apt-get -qq -y --no-install-recommends install \
       texinfo \
-      gnuplot
+      ghostscript \
+      gnuplot \
+      # Build-essential related
+      libgomp1 \
+      libcurl4-openssl-dev \
+      libgfortran-6-dev \
+      libhdf5-serial-dev \
+      libquadmath0 \
+      libqhull7 \
+      # Linear Algebra
+      libsuitesparseconfig4 \
+      # AMD
+      libamd2 \
+      libcamd2 \
+      libcolamd2 \
+      libccolamd2 \
+      # Other LA
+      libumfpack5 \
+      libqrupdate1 \
+      libcholmod3 \
+      libarpack2 \
+      libopenblas-base \
+      libcxsparse3 \
+      # FFTW
+      libfftw3-double3 \
+      libfftw3-single3 \
+      # Graphical Output
+      libfltk-gl1.3 \
+      libfltk1.3 \
+      libfontconfig1 \
+      libfreetype6 \
+      libgl2ps1 \
+      libgl1-mesa-glx \
+      libglu1-mesa \
+      libosmesa6 \
+      # CLI
+      libreadline7 \
+      # Sundials + PDEPE
+      libsundials-serial \
+      libklu1 \
+      libbtf1 \
+      # For Octave installation
+      equivs \
+      # Others
+      libgraphicsmagick++-q16-12 \
+      libgraphicsmagick-q16-3 \
+      liblcms2-2 \
+      libnghttp2-14 \
+      libidn2-0 \
+      librtmp1 \
+      libssh2-1 \
+      libpsl5 \
+      libmetis5 \
+      libunistring0 \
+      libsasl2-2 \
+      libldap-2.4-2 \
+      libsz2 \
+      libwebpmux2 \
+      libwmf0.2-7 \
+      libaec0
+ 
 
+# Set ENV the same as above
+ENV OctaveVersion=4.4.1
+
+# Copy over libs and share files
+COPY --from=builder /usr/local/lib/octave /usr/local/lib/octave
+COPY --from=builder /usr/local/share/octave /usr/local/share/octave
+
+# Copy over Octave binaries (includes mkoctfile)
+COPY --from=builder /usr/local/bin/*oct* /usr/local/bin/
+
+# Copy over Octave docstrings. Note that some paths contain 
+# version-specific information.
+COPY --from=builder /usr/local/share/octave/${OctaveVersion}/etc/built-in-docstrings /usr/local/share/octave/${OctaveVersion}/etc/
+
+# Copy over Octave include files
+COPY --from=builder /usr/local/include/octave-${OctaveVersion} /usr/local/include/octave-${OctaveVersion}
+
+# Copy over necessary fonts
+COPY --from=builder /usr/local/share/octave/${OctaveVersion}/fonts/* /usr/local/share/octave/${OctaveVersion}/fonts/
+
+# Copy over Octave STDLIB (m-files)
+COPY --from=builder /usr/local/share/octave/${OctaveVersion}/m /usr/local/share/octave/${OctaveVersion}/m
+
+# Copy over Octave site packages
+COPY --from=builder /usr/local/share/octave/site/* /usr/local/share/octave/site/
+
+# NOTE: Manfiles and docs not copied because they weren't built!
+
+## PDEPE files
 COPY --from=builder /pde1d/pde1d.mex /usr/local/share/octave/site/m/
 COPY --from=builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
 COPY --from=builder /pde1d/pdepe.m /usr/local/share/octave/site/m/
-COPY --from=builder /sundials/usr/lib/libsundials_ida.so.3 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /sundials/usr/lib/libsundials_sunlinsolklu.so.1 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /sundials/usr/lib/libsundials_nvecserial.so.3 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /sundials/usr/lib/libsundials_sunmatrixsparse.so.1 /usr/lib/x86_64-linux-gnu/
 
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libklu.so.1 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libbtf.so.1 /usr/lib/x86_64-linux-gnu/
+# Install octave package as equiv package
+COPY octave-local.tpl /tmp/octave-equivs/octave-local.tpl
 
-# Smoke test
-RUN octave --version && \
-    octave --eval "disp(exist('pdepe'));"
+RUN cd /tmp/octave-equivs && \
+    equivs-control octave-local && \
+    sed 's/__VER__/${OctaveVersion}/' octave-local.tpl > octave-local && \
+    cat octave-local && \
+    equivs-build octave-local && \
+    dpkg -i octave-local_*.deb
+
+RUN apt-get -qq -y remove \
+      equivs && \
+    apt-get -qq -y autoremove && \
+    apt-get autoclean && \
+    cd / && \
+    rm -rf \
+      /var/lib/apt/lists/* \
+      /var/log/dpkg.log && \
+    octave --version && \
+    octave --eval "disp(eye(2) \ [1, 10]');" && \
+    octave --eval "hf = figure(); x=linspace(0,1,30); plot(x, erf(x)); print(hf, 'plot.eps', '-deps');" && \
+    octave --eval "disp(exist('pdepe'));
+    
 
 # Set entrypoint (so this image can be used as an executable.)
 ENTRYPOINT ["/usr/local/bin/octave"]

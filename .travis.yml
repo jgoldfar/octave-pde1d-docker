@@ -2,13 +2,10 @@ language: minimal
 
 services:
   - docker
-
-jobs:
-  include:
-    - stage: build docker image
-      script:
-        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-        - ./build.sh
-    - stage: test docker image
-      script:
-        - ./test.sh
+env:
+  - TARGET="pdepe test-pdepe"
+  - TARGET=pdepe-gui
+  
+script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - make ${TARGET}
