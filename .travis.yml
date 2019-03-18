@@ -5,7 +5,7 @@ services:
 
 env:
   - TARGET=pdepe-base
-  - TARGET="pdepe test-pdepe"
+  - TARGET=pdepe
   - TARGET=pdepe-gui
 
 matrix:

@@ -19,6 +19,8 @@ ADD ./pde1d /pde1d
 
 RUN cd /pde1d && \
     make pde1d.mex
+
+RUN find / -name '*sundials*'
     
 # End builder image
 
@@ -119,6 +121,12 @@ COPY --from=builder /usr/local/share/octave/site/* /usr/local/share/octave/site/
 
 # NOTE: Manfiles and docs not copied because they weren't built!
 
+## Sundials files
+COPY --from=builder /usr/local/lib/libsundials_nvecserial.so.4 /usr/local/lib/
+COPY --from=builder /usr/local/lib/libsundials_ida.so.4 /usr/local/lib/
+COPY --from=builder /usr/local/lib/libsundials_sunlinsolklu.so.2 /usr/local/lib/
+COPY --from=builder /usr/local/lib/libsundials_sunmatrixsparse.so.2 /usr/local/lib/
+
 ## PDEPE files
 COPY --from=builder /pde1d/pde1d.mex /usr/local/share/octave/site/m/
 COPY --from=builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
@@ -126,6 +134,9 @@ COPY --from=builder /pde1d/pdepe.m /usr/local/share/octave/site/m/
 
 # Install octave package as equiv package
 COPY octave-local.tpl /tmp/octave-equivs/octave-local.tpl
+
+# Sundials + PDE1D requires LD_LIBRARY_PATH to be set
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
 RUN cd /tmp/octave-equivs && \
     equivs-control octave-local && \
@@ -144,7 +155,8 @@ RUN apt-get -qq -y remove \
     octave --version && \
     octave --eval "disp(eye(2) \ [1, 10]');" && \
     octave --eval "hf = figure(); x=linspace(0,1,30); plot(x, erf(x)); print(hf, 'plot.eps', '-deps');" && \
-    octave --eval "disp(exist('pdepe'));" && \
+    octave --eval "s = pdepe(0, @(x,t,u,ux) deal(1, ux, 0), @(x) zeros(size(x)), @(xl, yl, xr, yr, t) deal(0, 1, 0, 1), linspace(0,1,10), linspace(0,1,10)); exit(0)" && \
+    octave --eval "[t, y] = ode45(@(t,y) zeros(size(y)), [0, 1], 0); exit(0)" && \
     rm -f plot.eps
     
 

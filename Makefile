@@ -39,9 +39,10 @@ push-pdepe-gui:
 pdepe-gui: build-pdepe-gui push-pdepe-gui
 
 # Test target to check operation of PDEPE
+PWD:=$(shell pwd)
 test-pdepe: test/example1.m
-	docker run --rm --workdir /home --volume "$(pwd)/test":/home/ ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe --eval "example1()"
+	docker run --rm --workdir /home --volume "${PWD}/test":/home/ ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe --eval "example1()"
 
 # Run shell with PDEPE image
 shell:
-	docker run --rm --interactive --tty --workdir /home --volume "$(pwd)/test":/home/ --entrypoint /bin/bash ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe
+	docker run --rm --interactive --tty --workdir /home --volume "${PWD}/test":/home/ --entrypoint /bin/bash ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe
