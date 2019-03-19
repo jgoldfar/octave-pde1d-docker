@@ -3,7 +3,9 @@
 [![Docker Build Status](https://img.shields.io/docker/automated/jgoldfar/octave.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/jgoldfar/octave.svg)](https://hub.docker.com/r/jgoldfar/octave/)
 [![Build Status](https://travis-ci.org/jgoldfar/octave-pde1d-docker.svg?branch=master)](https://travis-ci.org/jgoldfar/octave-pde1d-docker)
 
-This repository builds containers for [Octave](https://octave.org/) including [pde1d](https://github.com/jgoldfar/pde1d), primarily for the purposes of running continuous integration processes against MATLAB code.
+This repository builds images for [Octave](https://octave.org/) including [pde1d](https://github.com/jgoldfar/pde1d), primarily for the purposes of running continuous integration processes against MATLAB code.
+
+This project is related to (and builds off of) the [octave-docker](https://github.com/jgoldfar/octave-docker) project.
 
 ## Setup
 
