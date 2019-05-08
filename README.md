@@ -9,12 +9,14 @@ This project is related to (and builds off of) the [octave-docker](https://githu
 
 ## Setup
 
-download dependencies (first time using the package only):
+download source dependencies (first time using the package only):
+
 ```shell
 git submodule update --init --recursive
 ```
 
-subsequently pulling any updates:
+Note: to pull any subsequent updates, run
+
 ```shell
 git pull --recurse-submodules
 ```

@@ -12,7 +12,8 @@ usage:
 	@echo "    - run-gui: Open the Octave GUI with the current directory mapped"
 	@echo "      to the working directory inside the container. Add the argument"
 	@echo "      PKG_PATH=... to mount the given path to /pkg."
-	@echo "    - shell: Open a bash shell in the non-gui Octave + PDEPE image"
+	@echo "    - shell: Open a bash shell in the non-gui Octave image."
+	@echo "      To change the image, set DOCKER_RUN_TAG=.... Default: ${DOCKER_RUN_TAG}"
 	@echo "    - build-pdepe-base: Build the base image for Octave + PDEPE"
 	@echo "    - push-pdepe-base: Push the above image"
 	@echo "    - build-pdepe: Build the non-gui image for Octave + PDEPE"
@@ -31,6 +32,7 @@ update-deps:
 DOCKER_USERNAME?=jgoldfar
 DOCKER_REPO_BASE?=octave
 
+
 # Base Image for PDEPE/PDE1D
 build-pdepe-base: Dockerfile.base
 	docker build -f $< -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-base .
@@ -39,6 +41,7 @@ push-pdepe-base:
 	docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-base
 
 pdepe-base: build-pdepe-base push-pdepe-base
+
 
 # No-GUI build
 build-pdepe: Dockerfile.debian update-deps
@@ -49,7 +52,8 @@ push-pdepe:
 
 pdepe: build-pdepe push-pdepe
 
-# No-GUI build
+
+# No-GUI build, with LBFGS
 build-pdepe-lbfgs: Dockerfile.debian update-deps
 	docker build --target pdepe-lbfgs -f $< -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-lbfgs .
 
@@ -57,6 +61,17 @@ push-pdepe-lbfgs:
 	docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-lbfgs
 
 pdepe-lbfgs: build-pdepe-lbfgs push-pdepe-lbfgs
+
+
+# No-GUI build, with LBFGS and Odepkg
+build-pdepe-lbfgs-odepkg: Dockerfile.debian update-deps
+	docker build --target pdepe-lbfgs-odepkg -f $< -t ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-lbfgs-odepkg .
+
+push-pdepe-lbfgs-odepkg:
+	docker push ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-lbfgs-odepkg
+
+pdepe-lbfgs-odepkg: build-pdepe-lbfgs-odepkg push-pdepe-lbfgs-odepkg
+
 
 # With-GUI build
 build-pdepe-gui: Dockerfile.gui update-deps
@@ -105,9 +120,9 @@ shell:
 		--rm \
 		--interactive \
 		--tty \
+		--net=none \
 		--workdir /data \
 		--user="$(id -u):$(id -g)" \
-		--net=none \
 		--volume "${PWD}":/data \
 		--entrypoint /bin/bash \
 		${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG}

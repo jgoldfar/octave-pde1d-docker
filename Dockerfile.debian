@@ -143,8 +143,7 @@ RUN cd /tmp/octave-equivs && \
     equivs-build octave-local && \
     dpkg -i octave-local_*.deb
 
-RUN apt-get -qq -y remove \
-      equivs && \
+RUN apt-get -qq -y remove equivs && \
     apt-get -qq -y autoremove && \
     apt-get autoclean && \
     rm -rf \
@@ -176,4 +175,12 @@ RUN apt-get -qq -y update && \
     make oct OCTAVE_VERSION=4.4.1 && \
     make install INSTALLDIR=/usr/local/share/octave/site/m/ && \
     cd / && \
-    octave --eval "disp(exist('lbfgsb')); exit(0)";
+    octave ${LbfgsbPath}/src/examplehs038.m
+
+FROM pdepe-lbfgs as pdepe-lbfgs-odepkg
+
+ADD ./ /odepkg-0.9.1.tar.gz
+
+RUN cd / && \
+    octave --eval "disp(pwd); ls; pkg install /odepkg-0.9.1.tar.gz" && \
+    rm /odepkg-0.9.1.tar.gz
