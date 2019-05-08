@@ -22,7 +22,7 @@ git pull --recurse-submodules
 build:
 
 ```shell
-make build-pdepe # Run make usage to see options
+make build-pdepe # Run make usage to see other options
 ```
 
 ## Usage
@@ -30,6 +30,14 @@ make build-pdepe # Run make usage to see options
 ```shell
 docker run --rm -i --user="$(id -u):$(id -g)" --net=none -v "$(pwd)":/data jgoldfar/octave:pdepe
 ```
+
+or
+
+```shell
+make [-f /path/to/this/dir/Makefile] shell DOCKER_RUN_IMAGE=pdepe-lbgfs
+```
+to open a shell in a container with the given image.
+
 
 Your current working directory should be mounted to `/data` inside the running container.
 

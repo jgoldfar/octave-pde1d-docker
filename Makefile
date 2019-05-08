@@ -99,12 +99,15 @@ run-gui:
 	xhost - || xhost -
 
 # Run shell with PDEPE image
+DOCKER_RUN_TAG?=pdepe
 shell:
 	docker run \
 		--rm \
 		--interactive \
 		--tty \
-		--workdir /home \
-		--volume "${PWD}/test":/home/ \
+		--workdir /data \
+		--user="$(id -u):$(id -g)" \
+		--net=none \
+		--volume "${PWD}":/data \
 		--entrypoint /bin/bash \
-		${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe
+		${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG}
