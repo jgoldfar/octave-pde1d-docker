@@ -151,8 +151,8 @@ RUN apt-get -qq -y remove \
       /var/lib/apt/lists/* \
       /var/log/dpkg.log && \
     octave --version && \
-    octave --eval "disp(eye(2) \ [1, 10]');" && \
-    octave --eval "hf = figure(); x=linspace(0,1,30); plot(x, erf(x)); print(hf, 'plot.eps', '-deps');" && \
+    octave --eval "disp(eye(2) \ [1, 10]'); exit(0)" && \
+    octave --eval "hf = figure(); x=linspace(0,1,30); plot(x, erf(x)); print(hf, 'plot.eps', '-deps'); exit(0)" && \
     octave --eval "s = pdepe(0, @(x,t,u,ux) deal(1, ux, 0), @(x) zeros(size(x)), @(xl, yl, xr, yr, t) deal(0, 1, 0, 1), linspace(0,1,10), linspace(0,1,10)); exit(0)" && \
     octave --eval "[t, y] = ode45(@(t,y) zeros(size(y)), [0, 1], 0); exit(0)" && \
     rm -f plot.eps
@@ -166,13 +166,14 @@ FROM pdepe as pdepe-lbfgs
 
 ENV LbfgsbPath=/lbfgsb
 
-ADD ./lbfgsb /${LbfgsbPath}
-
-
+ADD ./lbfgsb ${LbfgsbPath}
 
 RUN apt-get -qq -y update && \
     apt-get -qq -y --no-install-recommends install \
       build-essential \
-      gfortran
-    
-RUN
+      gfortran && \
+    cd ${LbfgsbPath}/src && \
+    make oct OCTAVE_VERSION=4.4.1 && \
+    make install INSTALLDIR=/usr/local/share/octave/site/m/ && \
+    cd / && \
+    octave --eval "disp(exist('lbfgsb')); exit(0)";
