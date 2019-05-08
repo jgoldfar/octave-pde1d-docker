@@ -7,6 +7,7 @@ env:
   - TARGET=pdepe-base
   - TARGET=pdepe
   - TARGET=pdepe-gui
+  - TARGET=pdepe-lbfgs
 
 matrix:
   fast_finish: true

@@ -19,8 +19,6 @@ ADD ./pde1d /pde1d
 
 RUN cd /pde1d && \
     make pde1d.mex
-
-RUN find / -name '*sundials*'
     
 # End builder image
 
@@ -28,7 +26,7 @@ RUN find / -name '*sundials*'
 ##
 ##
 
-FROM debian:stretch-slim as pdepe-gui
+FROM debian:stretch-slim as pdepe
 RUN apt-get -qq -y update && \
     apt-get -qq -y --no-install-recommends install \
       texinfo \
@@ -162,3 +160,19 @@ RUN apt-get -qq -y remove \
 
 # Set entrypoint (so this image can be used as an executable.)
 ENTRYPOINT ["/usr/local/bin/octave"]
+
+## Start L-BFGS-B image
+FROM pdepe as pdepe-lbfgs
+
+ENV LbfgsbPath=/lbfgsb
+
+ADD ./lbfgsb /${LbfgsbPath}
+
+
+
+RUN apt-get -qq -y update && \
+    apt-get -qq -y --no-install-recommends install \
+      build-essential \
+      gfortran
+    
+RUN

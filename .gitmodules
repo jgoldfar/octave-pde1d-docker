@@ -1,0 +1,7 @@
+[submodule "pde1d"]
+	path = pde1d
+	url = git@github.com:jgoldfar/pde1d.git
+[submodule "lbfgsb"]
+	path = lbfgsb
+	url = git@github.com:jgoldfar/lbfgsb-matlab.git
+	branch = build-on-docker

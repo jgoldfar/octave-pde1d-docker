@@ -189,3 +189,7 @@ RUN apt-get -qq -y remove \
 
 # Set entrypoint (so this image can be used as an executable.)
 ENTRYPOINT ["/usr/local/bin/octave"]
+
+FROM pdepe-gui as pdepe-gui-stdlib
+
+RUN octave --eval "pkg install -forge optim"
