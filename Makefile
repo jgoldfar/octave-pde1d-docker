@@ -7,22 +7,33 @@ usage:
 	@echo "usage: make [-f ${current_dir}/Makefile] [TARGET]"
 	@echo ""
 	@echo "Valid Targets:"
-	@echo "    - update-pde1d: Pull and/or update the correct branch for the local"
-	@echo "      pde1d repository"
+	@echo " Container Management:"
 	@echo "    - run-gui: Open the Octave GUI with the current directory mapped"
 	@echo "      to the working directory inside the container. Add the argument"
 	@echo "      PKG_PATH=... to mount the given path to /pkg."
-	@echo "    - shell: Open a bash shell in the non-gui Octave image."
+	@echo "    - run-shell: Open a bash shell in the non-gui Octave image."
 	@echo "      To change the image, set DOCKER_RUN_TAG=.... Default: ${DOCKER_RUN_TAG}"
+	@echo "    - run-script: Run a script using the image with DOCKER_RUN_TAG."
+	@echo "      Default script: DOCKER_RUN_SCRIPT=${DOCKER_RUN_SCRIPT}."
+	@echo "    - run-command: Run/evaluate a given command in Octave."
+	@echo "      Default command: DOCKER_RUN_COMMAND=${DOCKER_RUN_COMMAND}."
+	@echo " By default, the run-script and run-command targets call octave with the"
+	@echo " arguments OCTAVE_RUN_ARGS=${OCTAVE_RUN_ARGS}."
+	@echo " To modify the name given to the container, set DOCKER_CONTAINER_NAME=..."
+	@echo " By default, DOCKER_CONTAINER_NAME=${DOCKER_CONTAINER_NAME}"
+	@echo " Image Generation:"
 	@echo "    - build-pdepe-base: Build the base image for Octave + PDEPE"
 	@echo "    - push-pdepe-base: Push the above image"
 	@echo "    - build-pdepe: Build the non-gui image for Octave + PDEPE"
 	@echo "    - push-pdepe: Push the above image"
-	@echo "    - test-pdepe: Use the non-gui image to run a simple example script."
 	@echo "    - build-pdepe-lbfgs: Build the non-gui image for Octave + PDEPE + L-BFGS-B"
 	@echo "    - push-pdepe-lbfgs: Push the above image"
 	@echo "    - build-pdepe-gui: Build the GUI image for Octave + PDEPE"
 	@echo "    - push-pdepe-gui: Push the above image"
+	@echo " Utility:"
+	@echo "    - test-pdepe: Use the non-gui image to run a simple example script."
+	@echo "    - update-pde1d: Pull and/or update the correct branch for the local"
+	@echo "      pde1d repository"
 
 ## Update dependencies
 update-deps:
@@ -94,35 +105,83 @@ ifneq (${PKG_PATH},)
 ADD_PKG_PATH+=--volume=${PKG_PATH}:/pkg
 endif
 
+DOCKER_CONTAINER_NAME?=octave${RANDOM}
+# Tag to use when running examples/scripts/etc.
+DOCKER_RUN_TAG?=pdepe-gui
+# User information to pass to docker container
+DOCKER_RUN_USER:=$(shell id -u):$(shell id -g)
+# Display path for X11
 DISPLAY_PATH:=$(patsubst %:0,%,${DISPLAY})
 run-gui:
+	docker kill ${DOCKER_CONTAINER_NAME} || echo "Container not yet running."
 	xhost + && \
 	docker run \
        --rm \
        --tty \
        --interactive \
-       --name octave \
+       --name ${DOCKER_CONTAINER_NAME} \
+			 --user="${DOCKER_RUN_USER}" \
        -e DISPLAY=host.docker.internal:0 \
        -e QT_GRAPHICSSYSTEM="native" \
+	     -e LIBGL_DEBUG=verbose \
        --workdir=/data \
        --volume=${PWD}:/data ${ADD_PKG_PATH}\
        --volume ${DISPLAY_PATH}:/tmp/.X11-unix:rw \
        --entrypoint="" \
        --privileged \
-       ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:pdepe-gui \
+       ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG} \
        octave --gui --traditional --verbose && \
 	xhost - || xhost -
 
 # Run shell with PDEPE image
-DOCKER_RUN_TAG?=pdepe
-shell:
+run-shell:
 	docker run \
 		--rm \
 		--interactive \
 		--tty \
 		--net=none \
 		--workdir /data \
-		--user="$(id -u):$(id -g)" \
+		--user="${DOCKER_RUN_USER}" \
 		--volume "${PWD}":/data \
 		--entrypoint /bin/bash \
 		${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG}
+
+# Arguments for octave inside the container for run-script and
+# run-command:
+OCTAVE_RUN_ARGS?=--no-gui --no-window-system --no-line-editing --traditional --verbose
+
+# Run Main.m file
+DOCKER_RUN_SCRIPT?=Main.m
+run-script: ${PWD}/${DOCKER_RUN_SCRIPT}
+	docker kill ${DOCKER_CONTAINER_NAME} || echo "Container not yet running."
+	docker run \
+       --rm \
+       --tty \
+       --name ${DOCKER_CONTAINER_NAME} \
+       --workdir=/data \
+			 --user="${DOCKER_RUN_USER}" \
+       --volume=${PWD}:/data ${ADD_PKG_PATH}\
+       --entrypoint="" \
+       --privileged \
+       ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG} \
+       octave ${OCTAVE_RUN_ARGS} ${DOCKER_RUN_SCRIPT}
+
+DOCKER_RUN_COMMAND?=
+ifeq (${DOCKER_RUN_COMMAND},)
+run-command:
+	@echo "Usage: make -f ${current_dir}/Makefile $@ DOCKER_RUN_COMMAND=\"...\""
+else
+run-command:
+	docker kill ${DOCKER_CONTAINER_NAME} || echo "Container not yet running."
+	docker run \
+       --rm \
+       --tty \
+       --name ${DOCKER_CONTAINER_NAME} \
+       --workdir=/data \
+			 --user="${DOCKER_RUN_USER}" \
+       --volume=${PWD}:/data ${ADD_PKG_PATH}\
+       --entrypoint="" \
+       --privileged \
+       ${DOCKER_USERNAME}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG} \
+       octave ${OCTAVE_RUN_ARGS} --eval "${DOCKER_RUN_COMMAND}"
+endif
