@@ -1,33 +1,12 @@
 # Octave+PDE1D docker container
 
 [![Docker Build Status](https://img.shields.io/docker/automated/jgoldfar/octave.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/jgoldfar/octave.svg)](https://hub.docker.com/r/jgoldfar/octave/)
-[![Build Status](https://travis-ci.org/jgoldfar/octave-pde1d-docker.svg?branch=master)](https://travis-ci.org/jgoldfar/octave-pde1d-docker)
 
 This repository builds images for [Octave](https://octave.org/) including [pde1d](https://github.com/jgoldfar/pde1d) and [L-BFGS-B](https://github.com/pcarbo/lbfgsb-matlab), primarily for the purposes of running continuous integration processes against MATLAB code.
 
 This project is related to (and builds off of) the [octave-docker](https://github.com/jgoldfar/octave-docker) project.
 
-## Setup
-
-download source dependencies (first time using the package only):
-
-```shell
-git submodule update --init --recursive
-```
-
-Note: to pull any subsequent updates, run
-
-```shell
-git pull --recurse-submodules
-```
-
-build:
-
-```shell
-make build-pdepe # Run make usage to see other options
-```
-
-## Usage
+## Using Octave + PDE1D
 
 ```shell
 docker run --rm -i --user="$(id -u):$(id -g)" --net=none -v "$(pwd)":/data jgoldfar/octave:pdepe
@@ -47,7 +26,7 @@ Why should I use this container?
 
 - Easy setup, reduced need for locally installed dependencies
 
-## Container Descriptions
+### Available Images
 
 * `pdepe-lbfgs` contains Octave, pde1d, and [l-bfgs-b](git@github.com:pcarbo/lbfgsb-matlab.git).
 
@@ -57,10 +36,25 @@ Why should I use this container?
 
 * `pdepe-base` is the image onto which Octave + pde1d is built, and includes Sundials built form source (as required for PDE1D)
 
-## Misc Instructions
+## Setup (for building, developing, or improving Octave+PDE1D)
 
-To add a git dependency (e.g. L-BFGS-B) from a specific branch to a specific path, run
+0. The first time you clone this repository, you'll need to download source dependencies:
 
 ```shell
-git submodule add -b build-on-docker git@github.com:jgoldfar/lbfgsb-matlab.git lbfgsb
+git submodule update --init --recursive
 ```
+
+Note: to pull any subsequent updates, run
+
+```shell
+git pull --recurse-submodules
+```
+
+or `make update-deps`.
+
+The build process is automated with a self-documenting [Makefile](https://www.gnu.org/software/make/); run
+
+```shell
+make
+```
+to see usage instructions.
