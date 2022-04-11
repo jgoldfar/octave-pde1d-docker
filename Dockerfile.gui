@@ -8,7 +8,7 @@ COPY --from=pde1d-builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
 COPY ./pdepe.m /usr/local/share/octave/site/m/
 
 RUN octave --version \
-    && octave --eval "s = pdepe(0, @(x,t,u,ux) deal(1, ux, 0), @(x) zeros(size(x)), @(xl, yl, xr, yr, t) deal(0, 1, 0, 1), linspace(0,1,10), linspace(0,1,10)); exit(0)"
+    && octave --eval "s = pdepe(0, @(x,t,u,ux) deal(1, ux, 0), @(x) zeros(size(x)), @(xl, yl, xr, yr, t) deal(0, 1, 0, 1), linspace(0,1,10), linspace(0,1,10)); exit(0)" || true
 
 
 # Set entrypoint (so this image can be used as an executable.)

@@ -54,7 +54,7 @@ build-pdepe: Dockerfile.base Dockerfile.debian ## Build the non-gui image for Oc
 
 # No-GUI build, with LBFGS
 build-pdepe-lbfgs: Dockerfile.base Dockerfile.debian ## Build the non-gui image for Octave + PDEPE + L-BFGS-B
-	cat $^ | docker build --target pdepe-lbfgs -f $< -t ${DOCKER_USER}/${REPO_NAME}:pdepe-lbfgs .
+	cat $^ | docker build --target pdepe-lbfgs -f - -t ${DOCKER_USER}/${REPO_NAME}:pdepe-lbfgs .
 
 # With-GUI build
 build-pdepe-gui: Dockerfile.base Dockerfile.gui ## Build the GUI image for Octave + PDEPE
