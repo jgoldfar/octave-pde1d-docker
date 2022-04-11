@@ -40,47 +40,33 @@ update-deps: ## Update dependencies (i.e. submodules)
 
 ## Recipes for image build
 DOCKER_USER?=jgoldfar
-DOCKER_REPO_BASE?=octave
+REPO_NAME?=octave
 
 
 # Base Image for PDEPE/PDE1D
 build-pdepe-base: Dockerfile.base ## Build the base image for Octave + PDEPE
-	docker build -f $< -t ${DOCKER_USER}/${DOCKER_REPO_BASE}:pdepe-base .
+	docker build -f $< -t ${DOCKER_USER}/${REPO_NAME}:pdepe-base .
 
 pdepe-base: build-pdepe-base
 
 
 # No-GUI build
-build-pdepe: Dockerfile.debian update-deps ## Build the non-gui image for Octave + PDEPE
-	docker build --target pdepe -f $< -t ${DOCKER_USER}/${DOCKER_REPO_BASE}:pdepe .
-
-pdepe: build-pdepe
-
+build-pdepe: Dockerfile.base Dockerfile.debian ## Build the non-gui image for Octave + PDEPE
+	cat $^ | docker build --target pdepe -f - -t ${DOCKER_USER}/${REPO_NAME}:pdepe .
 
 # No-GUI build, with LBFGS
-build-pdepe-lbfgs: Dockerfile.debian update-deps ## Build the non-gui image for Octave + PDEPE + L-BFGS-B
-	docker build --target pdepe-lbfgs -f $< -t ${DOCKER_USER}/${DOCKER_REPO_BASE}:pdepe-lbfgs .
-
-pdepe-lbfgs: build-pdepe-lbfgs
-
-
-# No-GUI build, with LBFGS and Odepkg
-build-pdepe-lbfgs-odepkg: Dockerfile.debian update-deps ## ## Build the non-gui image for Octave + PDEPE + L-BFGS-B + Odepkg
-	docker build --target pdepe-lbfgs-odepkg -f $< -t ${DOCKER_USER}/${DOCKER_REPO_BASE}:pdepe-lbfgs-odepkg .
-
-pdepe-lbfgs-odepkg: build-pdepe-lbfgs-odepkg
-
+build-pdepe-lbfgs: Dockerfile.base Dockerfile.debian ## Build the non-gui image for Octave + PDEPE + L-BFGS-B
+	cat $^ | docker build --target pdepe-lbfgs -f $< -t ${DOCKER_USER}/${REPO_NAME}:pdepe-lbfgs .
 
 # With-GUI build
-build-pdepe-gui: Dockerfile.gui update-deps ## Build the GUI image for Octave + PDEPE
-	docker build --target pdepe-gui -f $< -t ${DOCKER_USER}/${DOCKER_REPO_BASE}:pdepe-gui .
+build-pdepe-gui: Dockerfile.base Dockerfile.gui ## Build the GUI image for Octave + PDEPE
+	cat $^ | docker build --target pdepe-gui -f - -t ${DOCKER_USER}/${REPO_NAME}:pdepe-gui .
 
-pdepe-gui: build-pdepe-gui
 
 # Test target to check operation of PDEPE
 PWD:=$(shell pwd)
 test-pdepe: test/example1.m ## Use the non-gui image to run a simple example script.
-	docker run --rm --workdir /home --volume "${PWD}/test":/home/ ${DOCKER_USER}/${DOCKER_REPO_BASE}:pdepe --eval "example1()"
+	docker run --rm --workdir /home --volume "${PWD}/test":/home/ ${DOCKER_USER}/${REPO_NAME}:pdepe --eval "example1()"
 
 # host.docker.internal:0
 PKG_PATH?=
@@ -113,7 +99,7 @@ run-gui: ## Open the Octave GUI with the current directory mapped to the working
 	   --volume ${DISPLAY_PATH}:/tmp/.X11-unix:rw \
 	   --entrypoint="" \
 	   --privileged \
-	   ${DOCKER_USER}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG} \
+	   ${DOCKER_USER}/${REPO_NAME}:${DOCKER_RUN_TAG} \
 	   octave --gui --traditional --verbose && \
 	xhost - || xhost -
 
@@ -127,7 +113,7 @@ run-shell: ## Open a bash shell in the non-gui Octave image. To change the image
 		--user="${DOCKER_RUN_USER}" \
 		--volume "${PWD}":/data \
 		--entrypoint /bin/bash \
-		${DOCKER_USER}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG}
+		${DOCKER_USER}/${REPO_NAME}:${DOCKER_RUN_TAG}
 
 # Arguments for octave inside the container for run-script and
 # run-command:
@@ -146,7 +132,7 @@ run-script: ${PWD}/${DOCKER_RUN_SCRIPT} ## Run DOCKER_RUN_SCRIPT using the image
 	   --volume=${PWD}:/data ${ADD_PKG_PATH}\
 	   --entrypoint="" \
 	   --privileged \
-	   ${DOCKER_USER}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG} \
+	   ${DOCKER_USER}/${REPO_NAME}:${DOCKER_RUN_TAG} \
 	   octave ${OCTAVE_RUN_ARGS} ${DOCKER_RUN_SCRIPT}
 
 DOCKER_RUN_COMMAND?=
@@ -165,6 +151,6 @@ run-command: ## run-command: Run/evaluate command DOCKER_RUN_COMMAND in Octave.
 	   --volume=${PWD}:/data ${ADD_PKG_PATH}\
 	   --entrypoint="" \
 	   --privileged \
-	   ${DOCKER_USER}/${DOCKER_REPO_BASE}:${DOCKER_RUN_TAG} \
+	   ${DOCKER_USER}/${REPO_NAME}:${DOCKER_RUN_TAG} \
 	   octave ${OCTAVE_RUN_ARGS} --eval "${DOCKER_RUN_COMMAND}"
 endif

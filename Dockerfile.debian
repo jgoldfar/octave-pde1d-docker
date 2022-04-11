@@ -1,161 +1,15 @@
-FROM jgoldfar/octave:pdepe-base as builder
+FROM jgoldfar/octave:debian-latest as pdepe
 
-LABEL maintainer="Jonathan Goldfarb <jgoldfar@my.fit.edu>"
-
-# Make sure we don't get notifications we can't answer during building.
-ENV DEBIAN_FRONTEND=noninteractive \
-    OctaveVersion=4.4.1 \
-    OctavePath=/opt/octave \
-    USE_OCTAVE=true
-
-#TODO: Re-add make check step
-# ( make check || echo "Tests Failed." )
-
-RUN cd ${OctavePath} && \
-    ./configure --without-qt --disable-docs && \
-    make -j3 install
-
-ADD ./pde1d /pde1d
-
-RUN cd /pde1d && \
-    make pde1d.mex
-    
-# End builder image
-
-## 
-##
-##
-
-FROM debian:stretch-slim as pdepe
-RUN apt-get -qq -y update && \
-    apt-get -qq -y --no-install-recommends install \
-      texinfo \
-      ghostscript \
-      gnuplot \
-      # Build-essential related
-      libgomp1 \
-      libcurl4-openssl-dev \
-      libgfortran-6-dev \
-      libhdf5-serial-dev \
-      libquadmath0 \
-      libqhull7 \
-      # Linear Algebra
-      libsuitesparseconfig4 \
-      # AMD
-      libamd2 \
-      libcamd2 \
-      libcolamd2 \
-      libccolamd2 \
-      # Other LA
-      libumfpack5 \
-      libqrupdate1 \
-      libcholmod3 \
-      libarpack2 \
-      libopenblas-base \
-      libcxsparse3 \
-      # FFTW
-      libfftw3-double3 \
-      libfftw3-single3 \
-      # Graphical Output
-      libfltk-gl1.3 \
-      libfltk1.3 \
-      libfontconfig1 \
-      libfreetype6 \
-      libgl2ps1 \
-      libgl1-mesa-glx \
-      libglu1-mesa \
-      libosmesa6 \
-      # CLI
-      libreadline7 \
-      # Sundials + PDEPE
-      libklu1 \
-      libbtf1 \
-      # For Octave installation
-      equivs \
-      # Others
-      libgraphicsmagick++-q16-12 \
-      libgraphicsmagick-q16-3 \
-      liblcms2-2 \
-      libnghttp2-14 \
-      libidn2-0 \
-      librtmp1 \
-      libssh2-1 \
-      libpsl5 \
-      libmetis5 \
-      libunistring0 \
-      libsasl2-2 \
-      libldap-2.4-2 \
-      libsz2 \
-      libwebpmux2 \
-      libwmf0.2-7 \
-      libaec0
- 
-
-# Set ENV the same as above
-ENV OctaveVersion=4.4.1
-
-# Copy over libs and share files
-COPY --from=builder /usr/local/lib/octave /usr/local/lib/octave
-COPY --from=builder /usr/local/share/octave /usr/local/share/octave
-
-# Copy over Octave binaries (includes mkoctfile)
-COPY --from=builder /usr/local/bin/*oct* /usr/local/bin/
-
-# Copy over Octave docstrings. Note that some paths contain 
-# version-specific information.
-COPY --from=builder /usr/local/share/octave/${OctaveVersion}/etc/built-in-docstrings /usr/local/share/octave/${OctaveVersion}/etc/
-
-# Copy over Octave include files
-COPY --from=builder /usr/local/include/octave-${OctaveVersion} /usr/local/include/octave-${OctaveVersion}
-
-# Copy over necessary fonts
-COPY --from=builder /usr/local/share/octave/${OctaveVersion}/fonts/* /usr/local/share/octave/${OctaveVersion}/fonts/
-
-# Copy over Octave STDLIB (m-files)
-COPY --from=builder /usr/local/share/octave/${OctaveVersion}/m /usr/local/share/octave/${OctaveVersion}/m
-
-# Copy over Octave site packages
-COPY --from=builder /usr/local/share/octave/site/* /usr/local/share/octave/site/
-
-# NOTE: Manfiles and docs not copied because they weren't built!
-
-## Sundials files
-COPY --from=builder /usr/local/lib/libsundials_nvecserial.so.4 /usr/local/lib/
-COPY --from=builder /usr/local/lib/libsundials_ida.so.4 /usr/local/lib/
-COPY --from=builder /usr/local/lib/libsundials_sunlinsolklu.so.2 /usr/local/lib/
-COPY --from=builder /usr/local/lib/libsundials_sunmatrixsparse.so.2 /usr/local/lib/
+LABEL maintainer="Jonathan Goldfarb <jgoldfar@gmail.com>"
 
 ## PDEPE files
-COPY --from=builder /pde1d/pde1d.mex /usr/local/share/octave/site/m/
-COPY --from=builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
-COPY --from=builder /pde1d/pdepe.m /usr/local/share/octave/site/m/
+COPY --from=pde1d-builder /pde1d/pde1d.mex /usr/local/share/octave/site/m/
+COPY --from=pde1d-builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
+COPY --from=pde1d-builder /pde1d/pdepe.m /usr/local/share/octave/site/m/
 
-# Install octave package as equiv package
-COPY octave-local.tpl /tmp/octave-equivs/octave-local.tpl
+RUN octave --version \
+    && octave --eval "s = pdepe(0, @(x,t,u,ux) deal(1, ux, 0), @(x) zeros(size(x)), @(xl, yl, xr, yr, t) deal(0, 1, 0, 1), linspace(0,1,10), linspace(0,1,10)); exit(0)"
 
-# Sundials + PDE1D requires LD_LIBRARY_PATH to be set
-ENV LD_LIBRARY_PATH=/usr/local/lib
-
-RUN cd /tmp/octave-equivs && \
-    equivs-control octave-local && \
-    sed 's/__VER__/${OctaveVersion}/' octave-local.tpl > octave-local && \
-    cat octave-local && \
-    equivs-build octave-local && \
-    dpkg -i octave-local_*.deb
-
-RUN apt-get -qq -y remove equivs && \
-    apt-get -qq -y autoremove && \
-    apt-get autoclean && \
-    rm -rf \
-      /var/lib/apt/lists/* \
-      /var/log/dpkg.log && \
-    octave --version && \
-    octave --eval "disp(eye(2) \ [1, 10]'); exit(0)" && \
-    octave --eval "hf = figure(); x=linspace(0,1,30); plot(x, erf(x)); print(hf, 'plot.eps', '-deps'); exit(0)" && \
-    octave --eval "s = pdepe(0, @(x,t,u,ux) deal(1, ux, 0), @(x) zeros(size(x)), @(xl, yl, xr, yr, t) deal(0, 1, 0, 1), linspace(0,1,10), linspace(0,1,10)); exit(0)" && \
-    octave --eval "[t, y] = ode45(@(t,y) zeros(size(y)), [0, 1], 0); exit(0)" && \
-    rm -f plot.eps
-    
 
 # Set entrypoint (so this image can be used as an executable.)
 ENTRYPOINT ["/usr/local/bin/octave"]
@@ -163,16 +17,16 @@ ENTRYPOINT ["/usr/local/bin/octave"]
 ## Start L-BFGS-B image
 FROM pdepe as pdepe-lbfgs
 
-ENV LbfgsbPath=/lbfgsb
+ENV OctaveVersion=6.4.0
 
-ADD ./lbfgsb ${LbfgsbPath}
+ADD ./lbfgsb /lbfgsb
 
 RUN apt-get -qq -y update && \
     apt-get -qq -y --no-install-recommends install \
       build-essential \
       gfortran && \
     cd ${LbfgsbPath}/src && \
-    make oct OCTAVE_VERSION=4.4.1 && \
+    make oct OCTAVE_VERSION=${OctaveVersion} && \
     make install INSTALLDIR=/usr/local/share/octave/site/m/ && \
     cd / && \
     octave ${LbfgsbPath}/src/examplehs038.m

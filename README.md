@@ -4,7 +4,7 @@
 
 This repository builds images for [Octave](https://octave.org/) including [pde1d](https://github.com/jgoldfar/pde1d) and [L-BFGS-B](https://github.com/pcarbo/lbfgsb-matlab), primarily for the purposes of running continuous integration processes against MATLAB code.
 
-This project is related to (and builds off of) the [octave-docker](https://github.com/jgoldfar/octave-docker) project.
+This project builds on [octave-docker](https://github.com/jgoldfar/octave-docker).
 
 ## Using Octave + PDE1D
 
@@ -20,7 +20,7 @@ make [-f /path/to/this/dir/Makefile] shell DOCKER_RUN_IMAGE=pdepe-lbgfs
 to open a shell in a container with the given image.
 
 
-Your current working directory should be mounted to `/data` inside the running container.
+Your current working directory will be mounted to `/data` inside the running container.
 
 Why should I use this container?
 
@@ -30,11 +30,9 @@ Why should I use this container?
 
 * `pdepe-lbfgs` contains Octave, pde1d, and [l-bfgs-b](git@github.com:pcarbo/lbfgsb-matlab.git).
 
-* `pdepe` contains an Octave + pde1d installation on top of Debian Stretch-Slim (without any GUI components)
+* `pdepe` contains an Octave + pde1d installation on top of Debian Bullseye-Slim (without any GUI components)
 
-* `pdepe-gui` contains an Octave + pde1d installation on top of Debian Stretch-Slim, including GUI components.
-
-* `pdepe-base` is the image onto which Octave + pde1d is built, and includes Sundials built form source (as required for PDE1D)
+* `pdepe-gui` contains an Octave + pde1d installation on top of Debian Bullseye-Slim, including GUI components.
 
 ## Setup (for building, developing, or improving Octave+PDE1D)
 
