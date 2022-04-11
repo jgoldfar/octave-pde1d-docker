@@ -37,6 +37,7 @@ ADD ./pde1d /pde1d
 
 RUN apt-get -qq -y update \
     && apt-get -qq -y --no-install-recommends install \
+      gcc g++ make \
       libeigen3-dev \
       libboost-dev \
       liboctave-dev \
