@@ -47,8 +47,6 @@ REPO_NAME?=octave
 build-pdepe-base: Dockerfile.base ## Build the base image for Octave + PDEPE
 	docker build -f $< -t ${DOCKER_USER}/${REPO_NAME}:pdepe-base .
 
-pdepe-base: build-pdepe-base
-
 
 # No-GUI build
 build-pdepe: Dockerfile.base Dockerfile.debian ## Build the non-gui image for Octave + PDEPE
