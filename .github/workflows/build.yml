@@ -26,7 +26,7 @@ jobs:
       # - name: Login to Docker
       #   run: echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
 
-      - name: Build image for
+      - name: Build image for PDEPE
         run: |
           make build-pdepe
         env:

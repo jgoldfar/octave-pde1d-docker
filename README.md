@@ -1,5 +1,6 @@
 # Octave+PDE1D docker container
 
+[![Build Octave + PDE1D Images](https://github.com/jgoldfar/octave-pde1d-docker/actions/workflows/build.yml/badge.svg)](https://github.com/jgoldfar/octave-pde1d-docker/actions/workflows/build.yml)
 [![Docker Build Status](https://img.shields.io/docker/automated/jgoldfar/octave.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/jgoldfar/octave.svg)](https://hub.docker.com/r/jgoldfar/octave/)
 
 This repository builds images for [Octave](https://octave.org/) including [pde1d](https://github.com/jgoldfar/pde1d) and [L-BFGS-B](https://github.com/pcarbo/lbfgsb-matlab), primarily for the purposes of running continuous integration processes against MATLAB code.
