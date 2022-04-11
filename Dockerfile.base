@@ -33,7 +33,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 #TODO: Re-add make check step
 # ( make check || echo "Tests Failed." )
 
-ADD ./pde1d /pde1d
+COPY ./pde1d /pde1d
 
 RUN apt-get -qq -y update \
     && apt-get -qq -y --no-install-recommends install \
@@ -47,7 +47,6 @@ RUN apt-get -qq -y update \
     && mkdir -p build \
     && cd build \
     && cmake -DCMAKE_INSTALL_PREFIX=/pde1d .. \
-    && make pde1d \
-    && ls -lR /pde1d
+    && make pde1d
 
 # End pde1d-builder image
