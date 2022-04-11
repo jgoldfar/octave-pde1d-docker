@@ -47,6 +47,7 @@ RUN apt-get -qq -y update \
     && mkdir -p build \
     && cd build \
     && cmake -DCMAKE_INSTALL_PREFIX=/pde1d .. \
-    && make pde1d
+    && make pde1d \
+    && ls -lR /pde1d
 
 # End pde1d-builder image

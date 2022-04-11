@@ -4,8 +4,8 @@ LABEL maintainer="Jonathan Goldfarb <jgoldfar@gmail.com>"
 
 ## PDEPE files
 COPY --from=pde1d-builder /pde1d/pde1d.mex /usr/local/share/octave/site/m/
-COPY --from=pde1d-builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
-COPY --from=pde1d-builder /pde1d/pdepe.m /usr/local/share/octave/site/m/
+# COPY --from=pde1d-builder /pde1d/pde1d.m /usr/local/share/octave/site/m/
+# COPY --from=pde1d-builder /pde1d/pdepe.m /usr/local/share/octave/site/m/
 
 RUN octave --version \
     && octave --eval "s = pdepe(0, @(x,t,u,ux) deal(1, ux, 0), @(x) zeros(size(x)), @(xl, yl, xr, yr, t) deal(0, 1, 0, 1), linspace(0,1,10), linspace(0,1,10)); exit(0)"
@@ -25,8 +25,8 @@ RUN apt-get -qq -y update && \
     apt-get -qq -y --no-install-recommends install \
       build-essential \
       gfortran && \
-    cd ${LbfgsbPath}/src && \
+    cd /lbfgsb/src && \
     make oct OCTAVE_VERSION=${OctaveVersion} && \
     make install INSTALLDIR=/usr/local/share/octave/site/m/ && \
     cd / && \
-    octave ${LbfgsbPath}/src/examplehs038.m
+    octave /lbfgsb/src/examplehs038.m
