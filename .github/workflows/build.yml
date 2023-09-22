@@ -16,46 +16,34 @@ env:
 jobs:
   build:
     runs-on: 'ubuntu-20.04'
+    strategy:
+      fail-fast: false
+      matrix:
+        imgtag: ['pdepe', 'pdepe-lbfgs']
     steps:
       # https://github.com/actions/checkout
       - name: Checkout the commit triggering this job
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
 
       - name: Login to Docker
         run: echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
 
-      - name: Build image for PDEPE
+      - name: Build ${{ matrix.imgtag }} image
         run: |
-          make build-pdepe
+          make build-${{ matrix.imgtag }}
         env:
           DOCKER_BUILDKIT: 1
 
-      - name: Tag image with git SHA and latest
+      - name: Tag ${{ matrix.imgtag }} image with git SHA and latest
         run: |
-          docker tag $DOCKER_USER/$REPO_NAME:pdepe $DOCKER_USER/$REPO_NAME:pdepe-latest
-          docker tag $DOCKER_USER/$REPO_NAME:pdepe $DOCKER_USER/$REPO_NAME:pdepe-$GITHUB_SHA
+          docker tag $DOCKER_USER/$REPO_NAME:${{ matrix.imgtag }} $DOCKER_USER/$REPO_NAME:${{ matrix.imgtag }}-latest
+          docker tag $DOCKER_USER/$REPO_NAME:${{ matrix.imgtag }} $DOCKER_USER/$REPO_NAME:${{ matrix.imgtag }}-$GITHUB_SHA
 
       - name: Push tagged images to docker
         if: ${{ (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'schedule' ) && github.ref_protected }}
         run: |
-          docker push $DOCKER_USER/$REPO_NAME:pdepe-$GITHUB_SHA
-          docker push $DOCKER_USER/$REPO_NAME:pdepe-latest
-
-      - name: Build image for PDEPE + LBFGS
-        run: |
-          make build-pdepe-lbfgs
-        env:
-          DOCKER_BUILDKIT: 1
-
-      - name: Tag image with git SHA and latest
-        run: |
-          docker tag $DOCKER_USER/$REPO_NAME:pdepe-lbfgs $DOCKER_USER/$REPO_NAME:pdepe-lbfgs-latest
-          docker tag $DOCKER_USER/$REPO_NAME:pdepe-lbfgs $DOCKER_USER/$REPO_NAME:pdepe-lbfgs-$GITHUB_SHA
-
-      - name: Push tagged images to docker
-        if: ${{ (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'schedule' ) && github.ref_protected }}
-        run: |
-          docker push $DOCKER_USER/$REPO_NAME:pdepe-lbfgs-$GITHUB_SHA
-          docker push $DOCKER_USER/$REPO_NAME:pdepe-lbfgs-latest
+          docker push $DOCKER_USER/$REPO_NAME:${{ matrix.imgtag }}-$GITHUB_SHA
+          docker push $DOCKER_USER/$REPO_NAME:${{ matrix.imgtag }}-latest
+          docker push $DOCKER_USER/$REPO_NAME:${{ matrix.imgtag }}

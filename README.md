@@ -5,7 +5,13 @@
 
 This repository builds images for [Octave](https://octave.org/) including [pde1d](https://github.com/jgoldfar/pde1d) and [L-BFGS-B](https://github.com/pcarbo/lbfgsb-matlab), primarily for the purposes of running continuous integration processes against MATLAB code.
 
-This project builds on [octave-docker](https://github.com/jgoldfar/octave-docker).
+This project builds on [octave-docker](https://github.com/jgoldfar/octave-docker), is minimally maintained, and accepts PRs.
+
+> This program is distributed in the hope that it will be useful,
+> but WITHOUT ANY WARRANTY; without even the implied warranty of
+> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+For more information, reach out to the team at [desert.frog.solutions@gmail.com](mailto:desert.frog.solutions@gmail.com) or [desertfrogsolutions.com](https://desertfrogsolutions.com)
 
 ## Using Octave + PDE1D
 
