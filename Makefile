@@ -41,7 +41,9 @@ update-deps: ## Update dependencies (i.e. submodules)
 ## Recipes for image build
 DOCKER_USER?=jgoldfar
 REPO_NAME?=octave
-
+ifeq (${GITHUB_SHA},)
+GITHUB_SHA:=latest
+endif
 
 # Base Image for PDEPE/PDE1D
 build-pdepe-base: Dockerfile.base ## Build the base image for Octave + PDEPE
@@ -50,11 +52,25 @@ build-pdepe-base: Dockerfile.base ## Build the base image for Octave + PDEPE
 
 # No-GUI build
 build-pdepe: Dockerfile.base Dockerfile.debian ## Build the non-gui image for Octave + PDEPE
-	cat $^ | docker build --target pdepe -f - -t ${DOCKER_USER}/${REPO_NAME}:pdepe .
+	cat $^ |												\
+		docker build										\
+		--target pdepe										\
+		-f -												\
+		-t ${DOCKER_USER}/${REPO_NAME}:pdepe-${GITHUB_SHA}	\
+		-t ${DOCKER_USER}/${REPO_NAME}:pdepe-latest			\
+		-t ${DOCKER_USER}/${REPO_NAME}:pdepe				\
+		.
 
 # No-GUI build, with LBFGS
 build-pdepe-lbfgs: Dockerfile.base Dockerfile.debian ## Build the non-gui image for Octave + PDEPE + L-BFGS-B
-	cat $^ | docker build --target pdepe-lbfgs -f - -t ${DOCKER_USER}/${REPO_NAME}:pdepe-lbfgs .
+	cat $^ |														\
+		docker build												\
+		--target pdepe-lbfgs										\
+		-f -														\
+		-t ${DOCKER_USER}/${REPO_NAME}:pdepe-lbfgs-${GITHUB_SHA}	\
+		-t ${DOCKER_USER}/${REPO_NAME}:pdepe-lbfgs-latest			\
+		-t ${DOCKER_USER}/${REPO_NAME}:pdepe-lbfgs					\
+		.
 
 # With-GUI build
 build-pdepe-gui: Dockerfile.base Dockerfile.gui ## Build the GUI image for Octave + PDEPE

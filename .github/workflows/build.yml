@@ -31,8 +31,8 @@ jobs:
       - name: Login to Docker
         uses: docker/login-action@v3
         with:
-          username: ${DOCKER_USER}
-          password: ${DOCKER_TOKEN}
+          username: ${{secrets.DOCKER_USER}}
+          password: ${{secrets.DOCKER_TOKEN}}
 
       - name: Build ${{ matrix.imgtag }} image
         run: |

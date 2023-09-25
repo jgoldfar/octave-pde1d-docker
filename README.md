@@ -1,7 +1,7 @@
 # Octave+PDE1D docker container
 
 [![Build Octave + PDE1D Images](https://github.com/jgoldfar/octave-pde1d-docker/actions/workflows/build.yml/badge.svg)](https://github.com/jgoldfar/octave-pde1d-docker/actions/workflows/build.yml)
-[![Docker Build Status](https://img.shields.io/docker/automated/jgoldfar/octave.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/jgoldfar/octave.svg)](https://hub.docker.com/r/jgoldfar/octave/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/jgoldfar/octave.svg)](https://hub.docker.com/r/jgoldfar/octave/)
 
 This repository builds images for [Octave](https://octave.org/) including [pde1d](https://github.com/jgoldfar/pde1d) and [L-BFGS-B](https://github.com/pcarbo/lbfgsb-matlab), primarily for the purposes of running continuous integration processes against MATLAB code.
 
@@ -26,7 +26,6 @@ make [-f /path/to/this/dir/Makefile] shell DOCKER_RUN_IMAGE=pdepe-lbgfs
 ```
 to open a shell in a container with the given image.
 
-
 Your current working directory will be mounted to `/data` inside the running container.
 
 Why should I use this container?
@@ -35,11 +34,11 @@ Why should I use this container?
 
 ### Available Images
 
-* `pdepe-lbfgs` contains Octave, pde1d, and [l-bfgs-b](git@github.com:pcarbo/lbfgsb-matlab.git).
+* `pdepe-lbfgs` contains Octave, pde1d, and [l-bfgs-b](git@github.com:pcarbo/lbfgsb-matlab.git) in a Debian Bookworm-slim base image
 
-* `pdepe` contains an Octave + pde1d installation on top of Debian Bullseye-Slim (without any GUI components)
+* `pdepe` contains an Octave + pde1d installation on top of Debian Bookworm-Slim (without any GUI components)
 
-* `pdepe-gui` contains an Octave + pde1d installation on top of Debian Bullseye-Slim, including GUI components.
+* `pdepe-gui` contains an Octave + pde1d installation on top of Debian Bookworm-Slim, including GUI components.
 
 ## Setup (for building, developing, or improving Octave+PDE1D)
 
