@@ -1,7 +1,7 @@
 [submodule "pde1d"]
 	path = pde1d
 	url = https://github.com/jgoldfar/pde1d.git
-  branch = fixup-build
+	branch = fixup-build
 [submodule "lbfgsb"]
 	path = lbfgsb
 	url = https://github.com/jgoldfar/lbfgsb-matlab.git
